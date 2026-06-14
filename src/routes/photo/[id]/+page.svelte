@@ -66,18 +66,21 @@
 	);
 
 	// ─── Gallery ──────────────────────────────────────────────────────────────────
-	let isZoomed = $state(false);
 	let scrollerEl: HTMLElement | null = $state(null);
 
 	// Guard against scrollend firing again while SvelteKit navigation is in flight
 	let isNavigating = false;
+
+	// Mouse drag-to-swipe state
+	let isDragging = $state(false);
+	let startX = 0;
+	let startScrollLeft = 0;
 
 	// Whenever the photo changes (SvelteKit soft-nav), snap back to center slot instantly
 	$effect(() => {
 		if (!scrollerEl) return;
 		void photo.id; // reactive dependency
 		isNavigating = false;
-		isZoomed = false;
 		scrollerEl.scrollTo({ left: scrollerEl.clientWidth, behavior: 'instant' });
 	});
 
@@ -90,15 +93,15 @@
 		el.scrollTo({ left: el.clientWidth, behavior: 'instant' });
 
 		function onScrollEnd() {
-			if (isNavigating || !el) return;
+			if (isNavigating || !el || isDragging) return;
 			const vw = el.clientWidth;
 			const { scrollLeft } = el;
 			if (scrollLeft < vw * 0.5) {
 				isNavigating = true;
-				goto(`/photo/${prevId}`);
+				goto(`/photo/${prevId}`, { replaceState: true });
 			} else if (scrollLeft > vw * 1.5) {
 				isNavigating = true;
-				goto(`/photo/${nextId}`);
+				goto(`/photo/${nextId}`, { replaceState: true });
 			}
 		}
 
@@ -106,12 +109,48 @@
 		return () => el.removeEventListener('scrollend', onScrollEnd);
 	});
 
+	function handlePointerDown(e: PointerEvent) {
+		if (e.pointerType !== 'mouse') return;
+		if (e.button !== 0 || !scrollerEl) return;
+
+		isDragging = true;
+		startX = e.pageX;
+		startScrollLeft = scrollerEl.scrollLeft;
+
+		scrollerEl.setPointerCapture(e.pointerId);
+	}
+
+	function handlePointerMove(e: PointerEvent) {
+		if (!isDragging || !scrollerEl) return;
+		const dx = e.pageX - startX;
+		scrollerEl.scrollLeft = startScrollLeft - dx;
+	}
+
+	function handlePointerUp(e: PointerEvent) {
+		if (e.pointerType !== 'mouse') return;
+		if (!isDragging || !scrollerEl) return;
+		isDragging = false;
+		scrollerEl.releasePointerCapture(e.pointerId);
+
+		const dx = e.pageX - startX;
+		const threshold = Math.min(150, scrollerEl.clientWidth * 0.15);
+		if (dx < -threshold) {
+			isNavigating = true;
+			goto(`/photo/${nextId}`, { replaceState: true });
+		} else if (dx > threshold) {
+			isNavigating = true;
+			goto(`/photo/${prevId}`, { replaceState: true });
+		} else {
+			// Smooth scroll back to center
+			scrollerEl.scrollTo({ left: scrollerEl.clientWidth, behavior: 'smooth' });
+		}
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'ArrowRight') goto(`/photo/${nextId}`);
-		else if (e.key === 'ArrowLeft') goto(`/photo/${prevId}`);
+		if (e.key === 'ArrowRight') goto(`/photo/${nextId}`, { replaceState: true });
+		else if (e.key === 'ArrowLeft') goto(`/photo/${prevId}`, { replaceState: true });
 		else if (e.key === 'Escape') {
-			if (isZoomed) isZoomed = false;
-			else goto('/');
+			goto('/');
 		}
 	}
 </script>
@@ -136,47 +175,35 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div
-	class="relative h-dvh w-full font-sans text-[#111] antialiased transition-colors duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] {isZoomed
-		? 'bg-black'
-		: 'bg-[#FDFBF7]'}"
+	class="relative h-dvh w-full font-sans text-[#111] antialiased bg-[#FDFBF7]"
 >
 	<!-- Back button -->
-	{#if !isZoomed}
-		<header
-			transition:fade={{ duration: 300 }}
-			class="pointer-events-none absolute top-0 right-0 left-0 z-50 flex items-center p-6"
+	<header
+		class="pointer-events-none absolute top-0 right-0 left-0 z-50 flex items-center p-6"
+	>
+		<a
+			href="/"
+			class="group pointer-events-auto text-[11px] font-bold tracking-[0.2em] text-black/40 hover:text-black transition-colors uppercase flex items-center"
 		>
-			<a
-				href="/"
-				class="group pointer-events-auto inline-flex h-10 items-center justify-center rounded-full border border-black/8 bg-white/70 px-4 text-sm font-medium backdrop-blur-xl transition-all hover:bg-white active:scale-95"
-			>
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					class="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-0.5"
-				>
-					<path
-						d="M19 12H5M5 12L12 19M5 12L12 5"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-				Gallery
-			</a>
-		</header>
-	{/if}
+			<span class="mr-2 transform transition-transform group-hover:-translate-x-1 duration-300">←</span>
+			Gallery
+		</a>
+	</header>
 
 	<!--
 		CSS Scroll Snap strip: [prev | current | next]
 		Starts scrolled to center (scrollLeft = clientWidth).
 		scrollend detects which slot won and calls goto().
-		overflow:hidden when zoomed prevents accidental swipe.
 	-->
 	<div
 		bind:this={scrollerEl}
-		class="gallery-scroller h-full w-full {isZoomed ? 'overflow-hidden' : ''}"
+		class="gallery-scroller h-full w-full {isDragging ? 'is-dragging' : ''}"
+		role="region"
+		aria-label="Photo gallery"
+		onpointerdown={handlePointerDown}
+		onpointermove={handlePointerMove}
+		onpointerup={handlePointerUp}
+		onpointercancel={handlePointerUp}
 	>
 		<!-- Prev slot -->
 		<div class="gallery-slot">
@@ -184,24 +211,20 @@
 				src={prevPhoto.url}
 				alt={prevPhoto.title}
 				loading="eager"
-				class="max-h-[calc(100dvh-12rem)] max-w-full -translate-y-4 object-contain drop-shadow-2xl lg:max-h-[calc(100dvh-14rem)]"
+				draggable="false"
+				class="max-h-[calc(100dvh-12rem)] max-w-full object-contain lg:max-h-[calc(100dvh-14rem)]"
 			/>
 		</div>
 
-		<!-- Current slot — tap to toggle zoom -->
-		<button
-			class="gallery-slot outline-none {isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}"
-			onclick={() => (isZoomed = !isZoomed)}
-			aria-label={isZoomed ? 'Zoom out' : 'Zoom in'}
-		>
+		<!-- Current slot -->
+		<div class="gallery-slot">
 			<img
 				src={photo.url}
 				alt={photo.title}
-				class="max-w-full object-contain transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] {isZoomed
-					? 'max-h-dvh'
-					: 'max-h-[calc(100dvh-12rem)] -translate-y-4 drop-shadow-2xl lg:max-h-[calc(100dvh-14rem)]'}"
+				draggable="false"
+				class="max-h-[calc(100dvh-12rem)] max-w-full object-contain lg:max-h-[calc(100dvh-14rem)]"
 			/>
-		</button>
+		</div>
 
 		<!-- Next slot -->
 		<div class="gallery-slot">
@@ -209,56 +232,37 @@
 				src={nextPhoto.url}
 				alt={nextPhoto.title}
 				loading="eager"
-				class="max-h-[calc(100dvh-12rem)] max-w-full -translate-y-4 object-contain drop-shadow-2xl lg:max-h-[calc(100dvh-14rem)]"
+				draggable="false"
+				class="max-h-[calc(100dvh-12rem)] max-w-full object-contain lg:max-h-[calc(100dvh-14rem)]"
 			/>
 		</div>
 	</div>
 
 	<!-- Desktop nav arrows -->
-	{#if !isZoomed}
-		<a
-			transition:fade={{ duration: 300 }}
-			href={`/photo/${prevId}`}
-			class="pointer-events-none absolute top-0 bottom-0 left-0 z-40 hidden w-[15vw] cursor-w-resize items-center justify-start opacity-0 transition-opacity duration-300 hover:pointer-events-auto hover:opacity-100 md:flex"
-			aria-label="Previous photo"
-		>
-			<div
-				class="ml-6 flex h-10 w-10 items-center justify-center rounded-full border border-black/8 bg-white/80 backdrop-blur-xl transition-transform hover:scale-110"
-			>
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-4 w-4">
-					<path
-						d="M15 18l-6-6 6-6"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-			</div>
-		</a>
+	<a
+		href={`/photo/${prevId}`}
+		data-sveltekit-replacestate
+		class="absolute left-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex items-center justify-center w-12 h-12 rounded-full border border-black/10 bg-white/60 backdrop-blur-md text-black/60 hover:text-black hover:bg-white hover:border-black/20 hover:scale-105 active:scale-95 transition-all duration-300"
+		aria-label="Previous photo"
+	>
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+			<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" />
+		</svg>
+	</a>
 
-		<a
-			transition:fade={{ duration: 300 }}
-			href={`/photo/${nextId}`}
-			class="pointer-events-none absolute top-0 right-0 bottom-0 z-40 hidden w-[15vw] cursor-e-resize items-center justify-end opacity-0 transition-opacity duration-300 hover:pointer-events-auto hover:opacity-100 md:flex"
-			aria-label="Next photo"
-		>
-			<div
-				class="mr-6 flex h-10 w-10 items-center justify-center rounded-full border border-black/8 bg-white/80 backdrop-blur-xl transition-transform hover:scale-110"
-			>
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-4 w-4">
-					<path
-						d="M9 18l6-6-6-6"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-			</div>
-		</a>
-	{/if}
+	<a
+		href={`/photo/${nextId}`}
+		data-sveltekit-replacestate
+		class="absolute right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex items-center justify-center w-12 h-12 rounded-full border border-black/10 bg-white/60 backdrop-blur-md text-black/60 hover:text-black hover:bg-white hover:border-black/20 hover:scale-105 active:scale-95 transition-all duration-300"
+		aria-label="Next photo"
+	>
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+			<path d="M9 19l7-7-7-7" stroke-linecap="round" stroke-linejoin="round" />
+		</svg>
+	</a>
 
 	<!-- EXIF overlay -->
-	<ExifInfo {photo} {isZoomed} />
+	<ExifInfo {photo} isZoomed={false} />
 </div>
 
 <style>
@@ -269,6 +273,21 @@
 		overscroll-behavior-x: contain;
 		touch-action: pan-x;
 		scrollbar-width: none;
+		user-select: none;
+		-webkit-user-select: none;
+		cursor: grab;
+	}
+
+	.gallery-scroller.is-dragging {
+		scroll-snap-type: none;
+		scroll-behavior: auto;
+		cursor: grabbing;
+	}
+
+	.gallery-scroller img {
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-user-drag: none;
 	}
 
 	.gallery-scroller::-webkit-scrollbar {

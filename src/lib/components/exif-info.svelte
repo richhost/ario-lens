@@ -33,48 +33,33 @@
 			<!-- Desktop Layout -->
 			<div class="hidden justify-center md:flex">
 				<div
-					class="flex items-center gap-6 rounded-full border border-black/10 bg-white/70 px-6 py-3 text-[11px] font-medium text-black/70 backdrop-blur-xl"
+					class="flex items-center gap-4 text-[10px] font-mono tracking-widest text-black/40 uppercase"
 				>
-					<span class="flex items-center gap-1.5">
-						<IconFocus2 size={13} class="stroke-[1.5] text-black/40" />
-						{photo.focalLength ? `${photo.focalLength}mm` : '-'}
-					</span>
-					<div class="h-3 w-px bg-black/15"></div>
-					<span class="flex items-center gap-1.5">
-						<IconAperture size={13} class="stroke-[1.5] text-black/40" />
-						ƒ/{photo.aperture?.replace('f/', '') || '-'}
-					</span>
-					<div class="h-3 w-px bg-black/15"></div>
-					<span class="flex items-center gap-1.5">
-						<IconClock size={13} class="stroke-[1.5] text-black/40" />
-						{photo.shutterSpeed || '-'}s
-					</span>
-					<div class="h-3 w-px bg-black/15"></div>
-					<span class="flex items-center gap-1.5">
-						<span
-							class="rounded-[3px] border border-black/25 px-0.5 py-px text-[8px] leading-none font-bold text-black/40"
-							>ISO</span
-						>
-						{photo.iso || '-'}
-					</span>
+					<span>{photo.focalLength ? `${photo.focalLength}mm` : '-'}</span>
+					<span>/</span>
+					<span>ƒ/{photo.aperture?.replace('f/', '') || '-'}</span>
+					<span>/</span>
+					<span>{photo.shutterSpeed || '-'}s</span>
+					<span>/</span>
+					<span>ISO {photo.iso || '-'}</span>
 					{#if photo.make || photo.model}
-						<div class="h-3 w-px bg-black/15"></div>
-						<span class="text-black/50">{photo.make || ''} {photo.model || ''}</span>
+						<span>/</span>
+						<span>{photo.make || ''} {photo.model || ''}</span>
 					{/if}
 					{#if photo.lens}
-						<div class="h-3 w-px bg-black/15"></div>
-						<span class="max-w-48 truncate text-black/50" title={photo.lens}>{photo.lens}</span>
+						<span>/</span>
+						<span class="max-w-48 truncate" title={photo.lens}>{photo.lens}</span>
 					{/if}
 					{#if tags.length > 0}
-						<div class="h-3 w-px bg-black/15"></div>
-						<div class="flex items-center gap-1.5">
+						<span>/</span>
+						<div class="flex items-center gap-2">
 							{#each tags as { tag }}
 								<a
 									href="/?tag={tag.slug}"
-									class="rounded-full border border-black/15 px-2.5 py-0.5 text-[10px] font-medium text-black/40 transition-colors hover:border-black/30 hover:text-black/60"
+									class="text-black/40 hover:text-black hover:underline transition-colors lowercase font-mono"
 									onclick={(e) => e.stopPropagation()}
 								>
-									{tag.name}
+									#{tag.name}
 								</a>
 							{/each}
 						</div>
