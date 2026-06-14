@@ -1,5 +1,7 @@
 {
 	"files.associations": {
-		"*.css": "tailwindcss"
+		"*.css": "tailwindcss",
+		"oxc.fmt.configPath": ".oxfmtrc.json",
+		"editor.defaultFormatter": "oxc.oxc-vscode"
 	}
 }

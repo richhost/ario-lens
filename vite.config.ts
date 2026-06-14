@@ -14,7 +14,7 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true,
 				experimental: {
-					async: true,
+					async: true
 				}
 			},
 			adapter: adapter(),
@@ -25,7 +25,7 @@ export default defineConfig({
 				})
 			},
 			experimental: {
-				remoteFunctions: true,
+				remoteFunctions: true
 			}
 		}),
 		devtoolsJson(),
