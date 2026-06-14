@@ -84,7 +84,9 @@
 	</Sidebar.Root>
 
 	<Sidebar.Inset>
-		<header class="flex h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-background/95 px-4 backdrop-blur md:hidden">
+		<header
+			class="flex h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-background/95 px-4 backdrop-blur md:hidden"
+		>
 			<Sidebar.Trigger class="-ml-2" />
 			<div class="flex items-center gap-2">
 				<IconAperture size={16} />

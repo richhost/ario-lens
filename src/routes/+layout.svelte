@@ -6,7 +6,8 @@
 	let { children } = $props();
 
 	const siteName = 'Lensy';
-	const siteDescription = 'An editorial photography gallery capturing brutalist horizons, delicate glass layers, and the profound depth of human stillness.';
+	const siteDescription =
+		'An editorial photography gallery capturing brutalist horizons, delicate glass layers, and the profound depth of human stillness.';
 </script>
 
 <svelte:head>
