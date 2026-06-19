@@ -29,6 +29,7 @@
 	let activeTagName = $derived(
 		activeTag ? tagsWithPhotos.find((t: TagItem) => t.slug === activeTag)?.name : null
 	);
+	let photoCount = $derived(filteredPhotos.length);
 </script>
 
 <svelte:head>
@@ -61,113 +62,133 @@
 	})}</script>`}
 </svelte:head>
 
-<div
-	class="min-h-dvh overflow-x-hidden bg-white text-[#555] antialiased selection:bg-black/10 martab-layout"
->
-	<main class="relative z-10 mx-auto max-w-[1600px] px-6 py-16 md:px-12 lg:px-16 lg:py-24">
-		<!-- Centered Brand & Tag Navigation -->
-		<header class="mb-16 flex flex-col items-center gap-6 text-center">
-			<a
-				href="/"
-				class="text-3xl font-normal tracking-[0.25em] uppercase text-[#111] hover:opacity-85 transition-opacity"
-			>
-				Abiee
-			</a>
+<div class="min-h-dvh overflow-x-hidden bg-[#FAFAF8] text-[#1a1a1a] antialiased selection:bg-black/10">
+	<main class="relative z-10 mx-auto max-w-[1600px] px-6 md:px-12 lg:px-16">
+		<!-- Header: Brand + Navigation -->
+		<header class="flex flex-col gap-10 pt-20 pb-14 md:pt-28 md:pb-20">
+			<div class="flex flex-col gap-1">
+				<a
+					href="/"
+					class="text-4xl font-light tracking-tight text-[#111] transition-opacity hover:opacity-70 md:text-5xl"
+				>
+					Abiee
+				</a>
+				<p class="mt-2 text-sm font-light tracking-wide text-[#999]">
+					Shapes in Light — Editorial Photography
+				</p>
+			</div>
 
 			{#if tagsWithPhotos.length > 0}
-				<nav class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[11px] tracking-[0.15em] uppercase" aria-label="Filter by tag">
-					<a
-						href="/"
-						class="transition-all {!activeTag ? 'active-tag font-bold' : 'inactive-tag font-normal'}"
-					>
+				<nav
+					class="flex flex-wrap items-center gap-x-6 gap-y-2.5 text-[13px] tracking-wide"
+					aria-label="Filter by tag"
+				>
+					<a href="/" class="tag-link {!activeTag ? 'tag-link--active' : ''}">
 						All
+						{#if !activeTag}
+							<span class="tag-count">{photoCount}</span>
+						{/if}
 					</a>
 					{#each tagsWithPhotos as tag}
-						<a
-							href="/?tag={tag.slug}"
-							class="transition-all {activeTag === tag.slug ? 'active-tag font-bold' : 'inactive-tag font-normal'}"
-						>
+						<a href="/?tag={tag.slug}" class="tag-link {activeTag === tag.slug ? 'tag-link--active' : ''}">
 							{tag.name}
+							{#if activeTag === tag.slug}
+								<span class="tag-count">{photoCount}</span>
+							{/if}
 						</a>
 					{/each}
 				</nav>
 			{/if}
 		</header>
 
-		<!-- Active filter indicator -->
-		{#if activeTagName}
-			<div class="mb-12 flex items-center justify-center gap-3">
-				<h2 class="text-xs font-mono tracking-widest text-[#999] uppercase">{activeTagName}</h2>
-				<span class="text-[10px] font-mono text-black/30">({filteredPhotos.length})</span>
+		<!-- Gallery Grid -->
+		{#if filteredPhotos.length > 0}
+			<section
+				class="columns-1 gap-5 pb-24 sm:columns-2 lg:columns-3 xl:columns-4"
+				aria-label="Photography collection"
+			>
+				{#each filteredPhotos as photo, i (photo.id)}
+					<div class="grid-item" style="--stagger: {i}">
+						<a href="/photo/{photo.id}" class="group block">
+							<div class="relative overflow-hidden rounded-sm bg-black/2">
+								<img
+									src={photo.url}
+									alt={photo.title || 'Photography'}
+									loading="lazy"
+									class="block h-auto w-full transition-transform duration-[0.6s] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.03]"
+								/>
+								<!-- Hover overlay -->
+								<div class="absolute inset-0 flex items-end bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+									{#if photo.title}
+										<span class="p-4 text-sm font-light text-white/95">
+											{photo.title}
+										</span>
+									{/if}
+								</div>
+							</div>
+						</a>
+					</div>
+				{/each}
+			</section>
+		{:else}
+			<!-- Empty state -->
+			<div class="flex min-h-[40vh] items-center justify-center pb-24">
+				<p class="text-sm font-light tracking-wide text-[#bbb]">
+					{#if activeTagName}
+						No photos in {activeTagName}
+					{:else}
+						No photos yet
+					{/if}
+				</p>
 			</div>
 		{/if}
-
-		<!-- Clean Multi-Column Masonry Grid -->
-		<section
-			class="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4"
-			aria-label="Photography collection"
-		>
-			{#each filteredPhotos as photo (photo.id)}
-				<div class="martab-grid-item">
-					<a href="/photo/{photo.id}" class="block bg-black/[0.01]">
-						<img
-							src={photo.url}
-							alt={photo.title || 'Photography'}
-							loading="lazy"
-						/>
-					</a>
-				</div>
-			{/each}
-		</section>
 	</main>
 </div>
 
 <style>
-	.martab-layout {
-		font-family: 'Courier New', Courier, monospace;
+	/* Tag navigation links */
+	.tag-link {
+		position: relative;
+		color: #999;
+		font-weight: 400;
+		transition: color 0.25s ease;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
 	}
 
-	.martab-layout a {
-		font-family: 'Courier New', Courier, monospace;
+	.tag-link:hover {
+		color: #555;
 	}
 
-	.martab-layout a.active-tag {
-		color: #111111;
+	.tag-link--active {
+		color: #1a1a1a;
+		font-weight: 500;
 	}
 
-	.martab-layout a.inactive-tag {
-		color: #111111;
-		opacity: 0.4;
+	.tag-count {
+		font-size: 11px;
+		color: #c0c0c0;
+		font-weight: 400;
 	}
 
-	.martab-layout a.inactive-tag:hover {
-		opacity: 0.85;
-	}
-
-	.martab-grid-item {
-		margin-bottom: 1.5rem;
+	/* Masonry grid items */
+	.grid-item {
+		margin-bottom: 1.25rem;
 		break-inside: avoid;
 		opacity: 0;
-		animation: fade-in 0.8s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+		animation: grid-fade-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+		animation-delay: calc(var(--stagger) * 0.06s);
 	}
 
-	.martab-grid-item img {
-		width: 100%;
-		height: auto;
-		display: block;
-		transition: opacity 0.3s ease;
-	}
-
-	.martab-grid-item img:hover {
-		opacity: 0.8;
-	}
-
-	@keyframes fade-in {
-		0% {
+	@keyframes grid-fade-in {
+		from {
 			opacity: 0;
+			transform: translateY(12px);
 		}
-		100% {
+		to {
 			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 </style>
