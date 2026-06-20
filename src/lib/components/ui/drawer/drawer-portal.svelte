@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Drawer as DrawerPrimitive } from 'vaul-svelte';
+	import { Portal } from '@ark-ui/svelte/portal';
 
-	let { ...restProps }: DrawerPrimitive.PortalProps = $props();
+	let { children, ...restProps }: { children?: any; [key: string]: any } = $props();
 </script>
 
-<DrawerPrimitive.Portal {...restProps} />
+<Portal {...restProps}>
+	{@render children?.()}
+</Portal>

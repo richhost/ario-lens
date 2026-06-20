@@ -1,12 +1,27 @@
 <script lang="ts">
-	import { Drawer as DrawerPrimitive } from 'vaul-svelte';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 
 	let {
-		shouldScaleBackground = true,
 		open = $bindable(false),
-		activeSnapPoint = $bindable(null),
+		onOpenChange,
+		lazyMount = true,
+		unmountOnExit = true,
 		...restProps
-	}: DrawerPrimitive.RootProps = $props();
+	}: {
+		open?: boolean;
+		onOpenChange?: (open: boolean) => void;
+		lazyMount?: boolean;
+		unmountOnExit?: boolean;
+		[key: string]: any;
+	} = $props();
 </script>
 
-<DrawerPrimitive.Root {shouldScaleBackground} bind:open bind:activeSnapPoint {...restProps} />
+<Dialog.Root
+	bind:open
+	{lazyMount}
+	{unmountOnExit}
+	onOpenChange={(details) => {
+		onOpenChange?.(details.open);
+	}}
+	{...restProps}
+/>

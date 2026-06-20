@@ -1,17 +1,23 @@
 <script lang="ts">
-	import { Dialog as SheetPrimitive } from 'bits-ui';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 	import { cn } from '$lib/utils.js';
 
 	let {
 		ref = $bindable(null),
 		class: className,
 		...restProps
-	}: SheetPrimitive.OverlayProps = $props();
+	}: { ref?: any; class?: string; [key: string]: any } = $props();
 </script>
 
-<SheetPrimitive.Overlay
-	bind:ref
-	data-slot="sheet-overlay"
-	class={cn('fixed inset-0 z-50 bg-black/80 supports-backdrop-filter:backdrop-blur-xs', className)}
-	{...restProps}
-/>
+<Dialog.Backdrop bind:ref {...restProps}>
+	{#snippet asChild(attrs)}
+		<div
+			{...attrs()}
+			data-slot="sheet-overlay"
+			class={cn(
+				'fixed inset-0 isolate z-50 bg-black/30 backdrop-blur-xs duration-200 data-open:animate-in data-open:fade-in data-closed:animate-out data-closed:fade-out',
+				className
+			)}
+		></div>
+	{/snippet}
+</Dialog.Backdrop>

@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { Drawer as DrawerPrimitive } from 'vaul-svelte';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 	import { cn } from '$lib/utils.js';
 
 	let {
 		ref = $bindable(null),
 		class: className,
 		...restProps
-	}: DrawerPrimitive.DescriptionProps = $props();
+	}: { ref?: any; class?: string; [key: string]: any } = $props();
 </script>
 
-<DrawerPrimitive.Description
+<Dialog.Description
 	bind:ref
 	data-slot="drawer-description"
-	class={cn('text-xs/relaxed text-muted-foreground', className)}
+	class={cn('text-xs text-neutral-400 dark:text-neutral-500', className)}
 	{...restProps}
 />

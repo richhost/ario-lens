@@ -214,7 +214,7 @@
 
 <Dialog.Root
 	{open}
-	onOpenChange={(v) => {
+	onOpenChange={(v: boolean) => {
 		if (!v) closeUploadDialog();
 		else open = true;
 	}}

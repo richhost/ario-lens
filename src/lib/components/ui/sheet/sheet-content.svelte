@@ -3,14 +3,13 @@
 </script>
 
 <script lang="ts">
-	import { Dialog as SheetPrimitive } from 'bits-ui';
+	import { Dialog } from '@ark-ui/svelte/dialog';
+	import { Portal } from '@ark-ui/svelte/portal';
 	import type { Snippet } from 'svelte';
-	import SheetPortal from './sheet-portal.svelte';
-	import SheetOverlay from './sheet-overlay.svelte';
+	import { cn } from '$lib/utils.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { IconX } from '@tabler/icons-svelte-runes';
-	import { cn, type WithoutChildrenOrChild } from '$lib/utils.js';
-	import type { ComponentProps } from 'svelte';
+	import SheetOverlay from './sheet-overlay.svelte';
 
 	let {
 		ref = $bindable(null),
@@ -20,36 +19,56 @@
 		portalProps,
 		children,
 		...restProps
-	}: WithoutChildrenOrChild<SheetPrimitive.ContentProps> & {
-		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof SheetPortal>>;
+	}: {
+		ref?: any;
+		class?: string;
 		side?: Side;
 		showCloseButton?: boolean;
+		portalProps?: any;
 		children: Snippet;
+		[key: string]: any;
 	} = $props();
+
+	// Map side to positioner and content classes
+	const positionerClasses = {
+		right: 'fixed inset-y-0 right-0 z-50 flex h-full w-full justify-end pointer-events-none',
+		left: 'fixed inset-y-0 left-0 z-50 flex h-full w-full justify-start pointer-events-none',
+		top: 'fixed inset-x-0 top-0 z-50 flex w-full justify-center pointer-events-none',
+		bottom: 'fixed inset-x-0 bottom-0 z-50 flex w-full justify-center pointer-events-none'
+	};
+
+	const contentClasses = {
+		right: 'pointer-events-auto h-full w-3/4 max-w-sm border-l border-neutral-200 bg-white p-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-950 duration-300 ease-out data-open:animate-in data-open:slide-in-from-right data-closed:animate-out data-closed:slide-out-to-right',
+		left: 'pointer-events-auto h-full w-3/4 max-w-sm border-r border-neutral-200 bg-white p-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-950 duration-300 ease-out data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left',
+		top: 'pointer-events-auto w-full border-b border-neutral-200 bg-white p-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-950 duration-300 ease-out data-open:animate-in data-open:slide-in-from-top data-closed:animate-out data-closed:slide-out-to-top',
+		bottom: 'pointer-events-auto w-full border-t border-neutral-200 bg-white p-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-950 duration-300 ease-out data-open:animate-in data-open:slide-in-from-bottom data-closed:animate-out data-closed:slide-out-to-bottom'
+	};
 </script>
 
-<SheetPortal {...portalProps}>
+<Portal {...portalProps}>
 	<SheetOverlay />
-	<SheetPrimitive.Content
-		bind:ref
-		data-slot="sheet-content"
-		data-side={side}
-		class={cn(
-			'fixed z-50 flex flex-col bg-background bg-clip-padding text-xs/relaxed shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-[side=bottom]:data-open:slide-in-from-bottom-10 data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10 data-closed:animate-out data-closed:fade-out-0 data-[side=bottom]:data-closed:slide-out-to-bottom-10 data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10',
-			className
-		)}
-		{...restProps}
-	>
-		{@render children?.()}
-		{#if showCloseButton}
-			<SheetPrimitive.Close data-slot="sheet-close">
-				{#snippet child({ props })}
-					<Button variant="ghost" class="absolute top-4 right-4" size="icon-sm" {...props}>
-						<IconX />
-						<span class="sr-only">Close</span>
-					</Button>
-				{/snippet}
-			</SheetPrimitive.Close>
-		{/if}
-	</SheetPrimitive.Content>
-</SheetPortal>
+	<Dialog.Positioner class={positionerClasses[side]}>
+		<Dialog.Content bind:ref {...restProps}>
+			{#snippet asChild(attrs)}
+				<div
+					{...attrs()}
+					data-slot="sheet-content"
+					data-side={side}
+					class={cn(contentClasses[side], className)}
+				>
+					{@render children?.()}
+					{#if showCloseButton}
+						<Dialog.CloseTrigger>
+							{#snippet asChild(closeAttrs)}
+								<Button variant="ghost" size="icon-xs" class="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-900" {...closeAttrs()}>
+									<IconX class="size-3.5" />
+									<span class="sr-only">Close</span>
+								</Button>
+							{/snippet}
+						</Dialog.CloseTrigger>
+					{/if}
+				</div>
+			{/snippet}
+		</Dialog.Content>
+	</Dialog.Positioner>
+</Portal>

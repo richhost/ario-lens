@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Dialog as DialogPrimitive } from 'bits-ui';
+	import { Portal } from '@ark-ui/svelte/portal';
 
-	let { ...restProps }: DialogPrimitive.PortalProps = $props();
+	let { children, ...restProps }: { children?: any; [key: string]: any } = $props();
 </script>
 
-<DialogPrimitive.Portal {...restProps} />
+<Portal {...restProps}>
+	{@render children?.()}
+</Portal>

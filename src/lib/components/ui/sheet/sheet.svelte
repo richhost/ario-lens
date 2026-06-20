@@ -1,7 +1,17 @@
 <script lang="ts">
-	import { Dialog as SheetPrimitive } from 'bits-ui';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 
-	let { open = $bindable(false), ...restProps }: SheetPrimitive.RootProps = $props();
+	let {
+		open = $bindable(false),
+		lazyMount = true,
+		unmountOnExit = true,
+		...restProps
+	}: {
+		open?: boolean;
+		lazyMount?: boolean;
+		unmountOnExit?: boolean;
+		[key: string]: any;
+	} = $props();
 </script>
 
-<SheetPrimitive.Root bind:open {...restProps} />
+<Dialog.Root bind:open {lazyMount} {unmountOnExit} {...restProps} />

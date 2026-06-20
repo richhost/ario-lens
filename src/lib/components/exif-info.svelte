@@ -8,7 +8,7 @@
 	let { photo, isZoomed }: { photo: any; isZoomed: boolean } = $props();
 
 	let tags = $derived(
-		(photo.tags as { tag: { id: string; name: string; slug: string } }[] | undefined) ?? []
+		(photo?.tags as { tag: { id: string; name: string; slug: string } }[] | undefined) ?? []
 	);
 
 	let open = $derived(!!(page.state as App.PageState).exifDrawer);
@@ -24,7 +24,7 @@
 	}
 </script>
 
-{#if !isZoomed}
+{#if !isZoomed && photo}
 	<div
 		transition:fade={{ duration: 300 }}
 		class="pointer-events-none absolute right-0 bottom-0 left-0 z-50 flex justify-center px-4 pb-8"
@@ -53,7 +53,7 @@
 					{#if tags.length > 0}
 						<span>/</span>
 						<div class="flex items-center gap-2">
-							{#each tags as { tag }}
+							{#each tags as { tag } (tag.id)}
 								<a
 									href="/?tag={tag.slug}"
 									class="text-black/40 hover:text-black hover:underline transition-colors lowercase font-mono"
@@ -71,9 +71,9 @@
 			<div class="flex justify-center md:hidden">
 				<Drawer.Root {open} {onOpenChange}>
 					<Drawer.Trigger>
-						{#snippet child({ props }: { props: Record<string, unknown> })}
+						{#snippet asChild(props)}
 							<button
-								{...props}
+								{...props()}
 								onclick={openDrawer}
 								class="flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-5 py-2.5 text-[11px] font-medium tracking-wide text-black/60 backdrop-blur-xl transition-colors hover:bg-white/90 hover:text-black/80"
 							>
@@ -91,7 +91,7 @@
 						</Drawer.Header>
 						{#if tags.length > 0}
 							<div class="flex flex-wrap gap-1.5 px-4 pb-4">
-								{#each tags as { tag }}
+								{#each tags as { tag } (tag.id)}
 									<a
 										href="/?tag={tag.slug}"
 										class="rounded-full border border-black/15 bg-white/60 px-3 py-1 text-[11px] font-medium text-black/50 transition-colors hover:bg-white"

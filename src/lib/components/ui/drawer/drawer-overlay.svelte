@@ -1,20 +1,23 @@
 <script lang="ts">
-	import { Drawer as DrawerPrimitive } from 'vaul-svelte';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 	import { cn } from '$lib/utils.js';
 
 	let {
 		ref = $bindable(null),
 		class: className,
 		...restProps
-	}: DrawerPrimitive.OverlayProps = $props();
+	}: { ref?: any; class?: string; [key: string]: any } = $props();
 </script>
 
-<DrawerPrimitive.Overlay
-	bind:ref
-	data-slot="drawer-overlay"
-	class={cn(
-		'fixed inset-0 z-50 bg-black/80 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0',
-		className
-	)}
-	{...restProps}
-/>
+<Dialog.Backdrop bind:ref {...restProps}>
+	{#snippet asChild(attrs)}
+		<div
+			{...attrs()}
+			data-slot="drawer-overlay"
+			class={cn(
+				'fixed inset-0 isolate z-50 bg-black/30 backdrop-blur-xs duration-200 data-open:animate-in data-open:fade-in data-closed:animate-out data-closed:fade-out',
+				className
+			)}
+		></div>
+	{/snippet}
+</Dialog.Backdrop>

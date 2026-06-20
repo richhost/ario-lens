@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { Drawer as DrawerPrimitive } from 'vaul-svelte';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 
-	let { ref = $bindable(null), ...restProps }: DrawerPrimitive.CloseProps = $props();
+	let {
+		ref = $bindable(null),
+		...restProps
+	}: { ref?: any; [key: string]: any } = $props();
 </script>
 
-<DrawerPrimitive.Close bind:ref data-slot="drawer-close" {...restProps} />
+<Dialog.CloseTrigger bind:ref data-slot="drawer-close" {...restProps} />

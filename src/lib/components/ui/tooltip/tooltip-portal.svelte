@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Tooltip as TooltipPrimitive } from 'bits-ui';
+	import { Portal } from '@ark-ui/svelte/portal';
 
-	let { ...restProps }: TooltipPrimitive.PortalProps = $props();
+	let { children, ...restProps }: { children?: any; [key: string]: any } = $props();
 </script>
 
-<TooltipPrimitive.Portal {...restProps} />
+<Portal {...restProps}>
+	{@render children?.()}
+</Portal>

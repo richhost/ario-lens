@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { Drawer as DrawerPrimitive } from 'vaul-svelte';
-	import DrawerPortal from './drawer-portal.svelte';
-	import DrawerOverlay from './drawer-overlay.svelte';
+	import { Dialog } from '@ark-ui/svelte/dialog';
+	import { Portal } from '@ark-ui/svelte/portal';
+	import type { Snippet } from 'svelte';
 	import { cn } from '$lib/utils.js';
-	import type { ComponentProps } from 'svelte';
-	import type { WithoutChildrenOrChild } from '$lib/utils.js';
+	import DrawerOverlay from './drawer-overlay.svelte';
 
 	let {
 		ref = $bindable(null),
@@ -12,25 +11,34 @@
 		portalProps,
 		children,
 		...restProps
-	}: DrawerPrimitive.ContentProps & {
-		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DrawerPortal>>;
+	}: {
+		ref?: any;
+		class?: string;
+		portalProps?: any;
+		children: Snippet;
+		[key: string]: any;
 	} = $props();
 </script>
 
-<DrawerPortal {...portalProps}>
+<Portal {...portalProps}>
 	<DrawerOverlay />
-	<DrawerPrimitive.Content
-		bind:ref
-		data-slot="drawer-content"
-		class={cn(
-			'group/drawer-content fixed z-50 flex h-auto flex-col bg-transparent p-2 text-xs/relaxed text-popover-foreground before:absolute before:inset-2 before:-z-10 before:rounded-xl before:border before:border-border before:bg-popover data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm',
-			className
-		)}
-		{...restProps}
-	>
-		<div
-			class="mx-auto mt-4 hidden h-1.5 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
-		></div>
-		{@render children?.()}
-	</DrawerPrimitive.Content>
-</DrawerPortal>
+	<Dialog.Positioner class="fixed inset-0 z-50 flex items-end justify-center pointer-events-none">
+		<Dialog.Content bind:ref {...restProps}>
+			{#snippet asChild(attrs)}
+				<div
+					{...attrs()}
+					data-slot="drawer-content"
+					class={cn(
+						'pointer-events-auto flex w-full max-w-xl flex-col rounded-t-3xl border-t border-neutral-200/50 bg-[#F3EBE1] pb-10 shadow-2xl outline-none dark:border-neutral-800 dark:bg-neutral-900 duration-300 ease-out data-open:animate-in data-open:slide-in-from-bottom data-closed:animate-out data-closed:slide-out-to-bottom',
+						className
+					)}
+				>
+					<!-- Drag handle -->
+					<div class="mx-auto my-3 h-1 w-12 shrink-0 rounded-full bg-black/10 dark:bg-white/10"></div>
+					
+					{@render children?.()}
+				</div>
+			{/snippet}
+		</Dialog.Content>
+	</Dialog.Positioner>
+</Portal>

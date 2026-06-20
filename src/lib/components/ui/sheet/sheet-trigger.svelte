@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { Dialog as SheetPrimitive } from 'bits-ui';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 
-	let { ref = $bindable(null), ...restProps }: SheetPrimitive.TriggerProps = $props();
+	let {
+		ref = $bindable(null),
+		...restProps
+	}: { ref?: any; [key: string]: any } = $props();
 </script>
 
-<SheetPrimitive.Trigger bind:ref data-slot="sheet-trigger" {...restProps} />
+<Dialog.Trigger bind:ref data-slot="sheet-trigger" {...restProps} />

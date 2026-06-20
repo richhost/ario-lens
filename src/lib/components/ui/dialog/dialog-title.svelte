@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { Dialog as DialogPrimitive } from 'bits-ui';
+	import { Dialog } from '@ark-ui/svelte/dialog';
 	import { cn } from '$lib/utils.js';
 
 	let {
 		ref = $bindable(null),
 		class: className,
 		...restProps
-	}: DialogPrimitive.TitleProps = $props();
+	}: { ref?: any; class?: string; [key: string]: any } = $props();
 </script>
 
-<DialogPrimitive.Title
+<Dialog.Title
 	bind:ref
 	data-slot="dialog-title"
-	class={cn('text-sm font-medium', className)}
+	class={cn('text-sm font-medium text-black dark:text-white tracking-wide', className)}
 	{...restProps}
 />

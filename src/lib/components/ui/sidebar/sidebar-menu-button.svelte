@@ -28,10 +28,27 @@
 <script lang="ts">
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { cn, type WithElementRef, type WithoutChildrenOrChild } from '$lib/utils.js';
-	import { mergeProps } from 'bits-ui';
 	import type { ComponentProps, Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { useSidebar } from './context.svelte.js';
+
+	function mergeProps(a: any, b: any) {
+		const result = { ...a, ...b };
+		if (a && b) {
+			if (a.class && b.class) {
+				result.class = cn(a.class, b.class);
+			}
+			for (const key of Object.keys(result)) {
+				if (key.startsWith('on') && typeof a[key] === 'function' && typeof b[key] === 'function') {
+					result[key] = (...args: any[]) => {
+						a[key](...args);
+						b[key](...args);
+					};
+				}
+			}
+		}
+		return result;
+	}
 
 	let {
 		ref = $bindable(null),
@@ -81,8 +98,8 @@
 {:else}
 	<Tooltip.Root>
 		<Tooltip.Trigger>
-			{#snippet child({ props })}
-				{@render Button({ props })}
+			{#snippet asChild(props: any)}
+				{@render Button({ props: props() })}
 			{/snippet}
 		</Tooltip.Trigger>
 		<Tooltip.Content
